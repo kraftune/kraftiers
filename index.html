@@ -7,16 +7,22 @@
 
 <style>
 :root{
- --bg1:#021024;--bg2:#06325a;--accent:#7c3aed;--muted:#94a3b8;
- --maxwidth:1200px;font-family:Inter,system-ui;
+--bg1:#021024;
+--bg2:#06325a;
+--accent:#7c3aed;
+--muted:#94a3b8;
+font-family:Inter,system-ui;
 }
 
 body{
- margin:0;min-height:100vh;color:#e6eef8;
- background:linear-gradient(-45deg,var(--bg1),var(--bg2),#0b2a5a,var(--bg1));
- background-size:400% 400%;
- animation:gradientMove 25s linear infinite alternate;
- display:flex;justify-content:center
+margin:0;
+min-height:100vh;
+color:#e6eef8;
+background:linear-gradient(-45deg,var(--bg1),var(--bg2),#0b2a5a,var(--bg1));
+background-size:400% 400%;
+animation:gradientMove 25s linear infinite alternate;
+display:flex;
+justify-content:center;
 }
 
 @keyframes gradientMove{
@@ -25,80 +31,49 @@ body{
 100%{background-position:0% 50%}
 }
 
-.wrap{width:100%;max-width:var(--maxwidth);margin:28px auto;padding:24px;position:relative}
+.wrap{width:100%;max-width:1100px;padding:24px}
 
-.corner{
- position:absolute;
- top:8px;right:12px;
- font-size:12px;color:#94a3b8;
-}
-
-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.logo{width:56px;height:56px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);font-weight:800}
+header{display:flex;align-items:center;gap:12px}
+.logo{width:50px;height:50px;background:#111;border-radius:8px;display:grid;place-items:center;font-weight:900}
 
 .nav{display:flex;gap:8px;margin:16px 0}
-.tab{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;font-weight:700;background:transparent;color:white}
-.tab.active{background:rgba(124,58,237,0.3)}
+.tab{padding:8px 12px;border-radius:999px;border:1px solid #ffffff14;cursor:pointer;font-weight:700;background:transparent;color:white;transition:.25s}
+.tab.active{background:var(--accent);transform:scale(1.05)}
 
 .controls{display:flex;gap:8px;margin-bottom:12px}
-.search{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white}
+.search{flex:1;padding:10px;border-radius:10px;border:1px solid #ffffff14;background:transparent;color:white}
 .btn{padding:10px 12px;border-radius:10px;border:0;background:var(--accent);cursor:pointer;color:white;font-weight:700}
 
 .player-list{display:flex;flex-direction:column;gap:10px;padding:0;margin:0;list-style:none}
-.player-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.03)}
-
-.player-rank{font-weight:900;min-width:48px}
-.rank1{color:#ffd700}
-.rank2{color:#c0c0c0}
-.rank3{color:#cd7f32}
-
-.player-box{width:44px;height:36px;border:2px solid rgba(255,255,255,0.06);border-radius:6px}
+.player-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:#00000033;border:1px solid #ffffff10;animation:fade .35s ease}
+.player-rank{font-weight:900;width:50px}
+.gold{color:#ffd700}
+.silver{color:#c0c0c0}
+.bronze{color:#cd7f32}
+.player-box{width:40px;height:32px;border:1px solid #ffffff20;border-radius:6px}
 .player-name{font-weight:700}
-.player-points{color:#94a3b8;font-size:13px}
 .player-extra{font-size:12px;color:#cbd5f5}
+.delete-btn{margin-left:auto;background:#ef4444;border:0;color:white;border-radius:6px;padding:4px 8px;cursor:pointer}
 
-.delete{
- margin-left:auto;
- background:#ef4444;
- border:none;
- border-radius:6px;
- padding:6px 8px;
- cursor:pointer;
-}
+footer{text-align:center;margin-top:20px;color:#94a3b8;font-size:12px}
 
-.slide-out{animation:slideOut .25s forwards}
-.slide-in{animation:slideIn .35s}
-
-@keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-60px)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
-
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000000aa}
 .modal.open{display:flex}
+.form{background:#081427;padding:16px;border-radius:12px;width:380px;display:flex;flex-direction:column;gap:8px}
 
-.form{
- background:#0f172a;
- border:2px solid #334155;
- padding:16px;border-radius:12px;
- display:flex;flex-direction:column;gap:8px;
- width:420px;max-width:95%;
-}
-
-input,select{
- background:#020617;
- border:1px solid #334155;
- color:white;
- padding:10px;border-radius:8px;
+@keyframes fade{
+from{opacity:0;transform:translateY(10px)}
+to{opacity:1;transform:translateY(0)}
 }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-<div class="corner">Propiedad De Kraftune Studios</div>
 
 <header>
 <div class="logo">KL</div>
-<h1>KraftList</h1>
+<h2>KraftList</h2>
 </header>
 
 <nav class="nav" id="nav"></nav>
@@ -109,141 +84,173 @@ input,select{
 </div>
 
 <div id="content"></div>
-<footer style="text-align:center;color:#94a3b8;margin-top:18px">Hecho por MakApagado24</footer>
+
+<footer>
+Propiedad De Kraftune Studios
+</footer>
+
 </div>
 
 <div class="modal" id="modal">
 <div class="form">
-<h3>⚔️ Añadir Jugador</h3>
+<h3>Agregar jugador</h3>
 <input id="f-name" placeholder="Nombre"/>
-<select id="f-cat">
-<option>PvP</option><option>Mace</option><option>BuildUHC</option>
-<option>Nodebuff</option><option>Battleground</option>
-<option>CrystalPvP</option><option>Ganadores de Eventos</option>
-<option>Mejor del Server de Discord</option><option>Finalistas</option>
-</select>
+<select id="f-cat"></select>
 <input id="f-points" type="number" placeholder="Puntos"/>
 <input id="f-desc" placeholder="Descripción"/>
 <input id="f-link" placeholder="Link"/>
-<div style="display:flex;gap:8px;justify-content:flex-end">
-<button id="cancel" class="btn" style="background:#334155">Cancelar</button>
 <button id="save" class="btn">Guardar</button>
-</div>
+<button id="cancel" class="btn" style="background:#334155">Cancelar</button>
 </div>
 </div>
 
-<script>
-let admin=false;
-const ADMIN_CODE="kraftune123";
+<!-- 🔥 FIREBASE -->
+<script type="module">
 
-const data=[];
-const cats=['PvP','Mace','BuildUHC','Nodebuff','Battleground','CrystalPvP','Ganadores de Eventos','Mejor del Server de Discord','Finalistas'];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyB2cmVDJyoT_i9cMCz3D3iM2GGwkrZnw0E",
+authDomain:"kraftlist-659e2.firebaseapp.com",
+projectId:"kraftlist-659e2",
+storageBucket:"kraftlist-659e2.firebasestorage.app",
+messagingSenderId:"867558321438",
+appId:"1:867558321438:web:1f02a59488584efdc06d0f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const cats=[
+'PvP','Mace','BuildUHC','Nodebuff','Battleground',
+'CrystalPvP','Ganadores de Eventos',
+'Mejor del Server de Discord','Finalistas'
+];
+
 const descCats=new Set(['Ganadores de Eventos','Mejor del Server de Discord','Finalistas']);
 
 let active=cats[0];
+let data=[];
+let admin=false;
+
 const nav=document.getElementById('nav');
 const content=document.getElementById('content');
 const search=document.getElementById('search');
-const addBtn=document.getElementById('addBtn');
 
-function ordinal(i){
- const j=i%10,k=i%100;
- if(k>=11&&k<=13)return'th';
- if(j===1)return'st';
- if(j===2)return'nd';
- if(j===3)return'rd';
- return'th';
-}
+cats.forEach(c=>{
+const o=document.createElement('option');
+o.textContent=c;
+document.getElementById('f-cat').appendChild(o);
+});
 
 function renderNav(){
- nav.innerHTML='';
- cats.forEach(c=>{
-  const b=document.createElement('button');
-  b.className='tab'+(c===active?' active':'');
-  b.textContent=c;
-  b.onclick=()=>{active=c;render()};
-  nav.appendChild(b);
- });
+nav.innerHTML='';
+cats.forEach(c=>{
+const b=document.createElement('button');
+b.className='tab'+(c===active?' active':'');
+b.textContent=c;
+b.onclick=()=>{active=c;render();}
+nav.appendChild(b);
+});
+}
+
+function rankClass(i){
+if(i===0)return'gold';
+if(i===1)return'silver';
+if(i===2)return'bronze';
+return'';
 }
 
 function render(){
- renderNav();
- const q=search.value.toLowerCase();
- const list=data.filter(d=>d.cat===active&&d.name.toLowerCase().includes(q)).sort((a,b)=>b.points-a.points);
- content.innerHTML='';
- const ul=document.createElement('ul');
- ul.className='player-list';
+renderNav();
+const q=search.value.toLowerCase();
+const list=data.filter(d=>d.cat===active&&d.name.toLowerCase().includes(q))
+.sort((a,b)=>b.points-a.points);
 
- list.forEach((p,i)=>{
-  const li=document.createElement('li');
-  li.className='player-item';
+content.innerHTML='';
+const ul=document.createElement('ul');
+ul.className='player-list';
 
-  let extra='';
-  if(descCats.has(p.cat)&&p.desc)extra=p.desc;
-  else if(!descCats.has(p.cat)&&p.link)extra=p.link;
+list.forEach((p,i)=>{
+const li=document.createElement('li');
+li.className='player-item';
 
-  li.innerHTML=`
-   <div class='player-rank'>${i+1}${ordinal(i+1)}</div>
-   <div class='player-box'></div>
-   <div>
-    <div class='player-name'>${p.name}</div>
-    <div class='player-points'>${p.points} pts</div>
-    <div class='player-extra'>${extra||''}</div>
-   </div>
-  `;
+let extra='';
+if(descCats.has(p.cat))extra=p.desc;
+else extra=p.link;
 
-  ul.appendChild(li);
- });
+li.innerHTML=`
+<div class='player-rank ${rankClass(i)}'>${i+1}</div>
+<div class='player-box'></div>
+<div>
+<div class='player-name'>${p.name}</div>
+<div>${p.points} pts</div>
+<div class='player-extra'>${extra||''}</div>
+</div>
+`;
 
- content.appendChild(ul);
+if(admin){
+const del=document.createElement('button');
+del.className='delete-btn';
+del.textContent='X';
+del.onclick=async()=>{
+await deleteDoc(doc(db,"players",p.id));
+loadPlayers();
+};
+li.appendChild(del);
+}
+
+ul.appendChild(li);
+});
+
+content.appendChild(ul);
+}
+
+async function loadPlayers(){
+const snap=await getDocs(collection(db,"players"));
+data=[];
+snap.forEach(d=>data.push({id:d.id,...d.data()}));
+render();
 }
 
 search.oninput=render;
 
-const modal=document.getElementById('modal');
-
-addBtn.onclick=()=>{
- if(!admin){
-   const code=prompt("Código admin:");
-   if(code===ADMIN_CODE){
-    admin=true;
-    alert("Modo admin activado");
-   }else{
-    alert("Código incorrecto");
-    return;
-   }
- }
- modal.classList.add('open');
+document.getElementById('addBtn').onclick=()=>{
+if(!admin)return alert('Solo admin');
+modal.classList.add('open');
 };
 
 document.getElementById('cancel').onclick=()=>modal.classList.remove('open');
 
-document.getElementById('save').onclick=()=>{
- if(!admin)return;
+document.getElementById('save').onclick=async()=>{
+const name=document.getElementById('f-name').value;
+const cat=document.getElementById('f-cat').value;
+const points=parseInt(document.getElementById('f-points').value)||0;
+const desc=document.getElementById('f-desc').value;
+const link=document.getElementById('f-link').value;
 
- const name=document.getElementById('f-name').value.trim();
- const cat=document.getElementById('f-cat').value;
- const points=parseInt(document.getElementById('f-points').value)||0;
- const desc=document.getElementById('f-desc').value.trim();
- const link=document.getElementById('f-link').value.trim();
-
- if(!name)return alert('Pon nombre');
-
- data.push({name,cat,points,desc,link});
-
- modal.classList.remove('open');
- document.getElementById('f-name').value='';
- document.getElementById('f-points').value='';
- document.getElementById('f-desc').value='';
- document.getElementById('f-link').value='';
-
- active=cat;
- render();
+await addDoc(collection(db,"players"),{name,cat,points,desc,link});
+modal.classList.remove('open');
+loadPlayers();
 };
 
-render();
+window.addEventListener('keydown',e=>{
+if(e.key==='F9'){
+const pass=prompt("Admin pass");
+if(pass==="kraftadmin123"){
+admin=true;
+alert("Admin ON");
+}
+}
+});
+
+loadPlayers();
+
 </script>
 
 </body>
 </html>
+
 
