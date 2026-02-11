@@ -97,198 +97,215 @@ input,select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.
 
 <!-- SCRIPT: Firebase + lógica de la página -->
 <script type="module">
+/*
+  Código completo: Firebase (Firestore) + UI
+  - Asegúrate de tener Firestore creado y reglas temporales allow read, write: if true;
+*/
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy
+  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-  getAuth, GoogleAuthProvider,
-  signInWithPopup, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-/* CONFIG FIREBASE */
+/* --- Config Firebase (tu proyecto) --- */
 const firebaseConfig = {
-  apiKey:"AIzaSyB2cmVDJyoT_i9cMCz3D3iM2GGwkrZnw0E",
-  authDomain:"kraftlist-659e2.firebaseapp.com",
-  projectId:"kraftlist-659e2",
-  storageBucket:"kraftlist-659e2.firebasestorage.app",
-  messagingSenderId:"867558321438",
-  appId:"1:867558321438:web:1f02a59488584efdc06d0f"
+  apiKey: "AIzaSyB2cmVDJyoT_i9cMCz3D3iM2GGwkrZnw0E",
+  authDomain: "kraftlist-659e2.firebaseapp.com",
+  projectId: "kraftlist-659e2",
+  storageBucket: "kraftlist-659e2.firebasestorage.app",
+  messagingSenderId: "867558321438",
+  appId: "1:867558321438:web:1f02a59488584efdc06d0f"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-/* ⚠️ AQUI PONES TUS ADMINS */
-const ADMIN_EMAILS = [
-  "tucorreo@gmail.com",
-  "tuamigo@gmail.com"
+/* --- Categorías y configuraciones --- */
+const cats = [
+  'PvP','Mace','BuildUHC','Nodebuff','Battleground','CrystalPvP',
+  'Ganadores de Eventos','Mejor del Server de Discord','Finalistas'
 ];
+const descCats = new Set(['Ganadores de Eventos','Mejor del Server de Discord','Finalistas']);
 
-const cats=[
-'PvP','Mace','BuildUHC','Nodebuff','Battleground','CrystalPvP',
-'Ganadores de Eventos','Mejor del Server de Discord','Finalistas'
-];
+/* --- Estado de la app --- */
+let active = cats[0];
+let data = [];       // datos locales sincronizados con Firestore
+let isAdmin = false; // modo admin (activar con F9 o al pulsar + Añadir)
 
-const descCats=new Set([
-'Ganadores de Eventos','Mejor del Server de Discord','Finalistas'
-]);
+const nav = document.getElementById('nav');
+const indicator = document.getElementById('indicator');
+const content = document.getElementById('content');
+const search = document.getElementById('search');
+const modal = document.getElementById('modal');
 
-let active=cats[0];
-let data=[];
-let isAdmin=false;
+/* --- Inicializa el select del modal con categorías --- */
+const catSelect = document.getElementById('f-cat');
+cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSelect.appendChild(o); });
 
-const nav=document.getElementById('nav');
-const indicator=document.getElementById('indicator');
-const content=document.getElementById('content');
-const search=document.getElementById('search');
-const modal=document.getElementById('modal');
-
-/* LOGIN ADMIN CON GOOGLE */
-document.getElementById('addBtn').onclick=async()=>{
- if(!isAdmin){
-  const provider=new GoogleAuthProvider();
-  await signInWithPopup(auth,provider);
-  return;
- }
- modal.classList.add('open');
-};
-
-onAuthStateChanged(auth,user=>{
- if(!user)return;
- if(ADMIN_EMAILS.includes(user.email)){
-  isAdmin=true;
-  alert("Admin activado: "+user.email);
-  render();
- }
-});
-
-/* NAV */
-function moveIndicator(el){
- const rect=el.getBoundingClientRect();
- const navRect=nav.getBoundingClientRect();
- indicator.style.width=rect.width+'px';
- indicator.style.left=(rect.left-navRect.left)+'px';
+/* --- Utilidades --- */
+function ordinalSuffix(i){
+  const j = i % 10, k = i % 100;
+  if(k >= 11 && k <= 13) return 'th';
+  if(j === 1) return 'st';
+  if(j === 2) return 'nd';
+  if(j === 3) return 'rd';
+  return 'th';
 }
-
-function renderNav(){
- nav.querySelectorAll('.tab').forEach(e=>e.remove());
- cats.forEach(c=>{
-  const b=document.createElement('button');
-  b.className='tab'+(c===active?' active':'');
-  b.textContent=c;
-  b.onclick=()=>{active=c;render(true);moveIndicator(b)};
-  nav.appendChild(b);
-  if(c===active)setTimeout(()=>moveIndicator(b),0);
- });
-}
-
-function ordinal(i){
- const j=i%10,k=i%100;
- if(k>=11&&k<=13)return'th';
- if(j===1)return'st';
- if(j===2)return'nd';
- if(j===3)return'rd';
- return'th';
-}
-
 function rankClass(i){
- if(i===0)return'gold';
- if(i===1)return'silver';
- if(i===2)return'bronze';
- return'';
+  if(i === 0) return 'gold';
+  if(i === 1) return 'silver';
+  if(i === 2) return 'bronze';
+  return '';
 }
 
+/* --- Navegación (tabs) con indicador animado --- */
+function moveIndicator(el){
+  const rect = el.getBoundingClientRect();
+  const navRect = nav.getBoundingClientRect();
+  indicator.style.width = rect.width + 'px';
+  indicator.style.left = (rect.left - navRect.left) + 'px';
+}
+function renderNav(){
+  nav.querySelectorAll('.tab').forEach(e => e.remove());
+  cats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (c === active ? ' active' : '');
+    b.textContent = c;
+    b.onclick = () => { active = c; render(true); moveIndicator(b); };
+    nav.appendChild(b);
+    if(c === active) setTimeout(()=>moveIndicator(b), 0);
+  });
+}
+
+/* --- Render lista (local, basada en "data") --- */
 function drawList(list){
- content.innerHTML='';
- const ul=document.createElement('ul');
- ul.className='player-list';
+  content.innerHTML = '';
+  const ul = document.createElement('ul');
+  ul.className = 'player-list';
+  list.forEach((p, i) => {
+    const li = document.createElement('li');
+    li.className = 'player-item';
+    const rc = rankClass(i);
+    let extra = '';
+    if(descCats.has(p.cat)) extra = p.desc || '';
+    else extra = p.link || '';
 
- list.forEach((p,i)=>{
-  const li=document.createElement('li');
-  li.className='player-item';
-  const rc=rankClass(i);
+    li.innerHTML = `
+      <div class='player-rank ${rc}'>${i+1}${ordinalSuffix(i+1)}</div>
+      <div class='player-box'></div>
+      <div>
+        <div class='player-name'>${p.name}</div>
+        <div class='player-points'>${p.points} pts</div>
+        <div class='player-extra'>${extra}</div>
+      </div>
+    `;
+    if(isAdmin){
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.textContent = '🗑';
+      del.onclick = async () => {
+        // borrar en Firestore
+        await deleteDoc(doc(db, "players", p.id));
+      };
+      li.appendChild(del);
+    }
+    ul.appendChild(li);
+  });
+  content.appendChild(ul);
+}
 
-  let extra='';
-  if(descCats.has(p.cat))extra=p.desc||'';
-  else extra=p.link||'';
+/* --- render principal (con slide opcional) --- */
+function render(slide = false){
+  renderNav();
+  const q = (search.value || '').trim().toLowerCase();
+  const list = data
+    .filter(d => d.cat === active && d.name.toLowerCase().includes(q))
+    .sort((a,b) => b.points - a.points);
 
-  li.innerHTML=`
-   <div class='player-rank ${rc}'>${i+1}${ordinal(i+1)}</div>
-   <div class='player-box'></div>
-   <div>
-     <div class='player-name'>${p.name}</div>
-     <div class='player-points'>${p.points} pts</div>
-     <div class='player-extra'>${extra}</div>
-   </div>
-  `;
-
-  if(isAdmin){
-   const del=document.createElement('button');
-   del.className='delete-btn';
-   del.textContent='🗑';
-   del.onclick=async()=>{
-    await deleteDoc(doc(db,"players",p.id));
-   };
-   li.appendChild(del);
+  if(slide){
+    content.classList.add('slide-out');
+    setTimeout(()=>{
+      drawList(list);
+      content.classList.remove('slide-out');
+      content.classList.add('slide-in');
+      setTimeout(()=>content.classList.remove('slide-in'), 350);
+    }, 220);
+  } else {
+    drawList(list);
   }
-
-  ul.appendChild(li);
- });
-
- content.appendChild(ul);
 }
 
-function render(slide=false){
- renderNav();
- const q=(search.value||'').toLowerCase();
+/* --- búsqueda --- */
+search.addEventListener('input', () => render());
 
- const list=data
- .filter(d=>d.cat===active&&d.name.toLowerCase().includes(q))
- .sort((a,b)=>b.points-a.points);
-
- drawList(list);
-}
-
-search.oninput=render;
-
-/* GUARDAR JUGADOR */
-document.getElementById('save').onclick=async()=>{
- if(!isAdmin)return alert("Solo admin");
-
- const name=document.getElementById('f-name').value.trim();
- const cat=document.getElementById('f-cat').value;
- const points=parseInt(document.getElementById('f-points').value)||0;
- const desc=document.getElementById('f-desc').value.trim();
- const link=document.getElementById('f-link').value.trim();
-
- if(!name)return alert("Pon nombre");
-
- await addDoc(collection(db,"players"),{
-  name,cat,points,desc,link
- });
-
- modal.classList.remove('open');
+/* --- + Añadir: pedir contraseña si no admin --- */
+document.getElementById('addBtn').onclick = () => {
+  if(!isAdmin){
+    const pass = prompt("Contraseña admin:");
+    if(pass === "kraftadmin123"){
+      isAdmin = true;
+      alert("Modo admin activado");
+    } else {
+      alert("Contraseña incorrecta");
+      return;
+    }
+  }
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden','false');
 };
 
-/* FIRESTORE REALTIME */
-const q=query(collection(db,"players"),orderBy("points","desc"));
+/* --- cancelar modal --- */
+document.getElementById('cancel').onclick = () => {
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+};
 
-onSnapshot(q,snap=>{
- data=[];
- snap.forEach(d=>data.push({id:d.id,...d.data()}));
- render();
+/* --- Guardar nuevo jugador (añade a Firestore) --- */
+document.getElementById('save').onclick = async () => {
+  if(!isAdmin){ alert("Solo admin"); return; }
+  const name = document.getElementById('f-name').value.trim();
+  const cat = document.getElementById('f-cat').value;
+  const points = parseInt(document.getElementById('f-points').value) || 0;
+  const desc = document.getElementById('f-desc').value.trim();
+  const link = document.getElementById('f-link').value.trim();
+  if(!name){ alert('Pon nombre'); return; }
+  await addDoc(collection(db, "players"), { name, cat, points, desc, link });
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-points').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-link').value = '';
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+};
+
+/* --- activar admin con F9 (atajo) --- */
+window.addEventListener('keydown', e => {
+  if(e.key === 'F9'){
+    const pass = prompt("Contraseña admin:");
+    if(pass === "kraftadmin123"){
+      isAdmin = true;
+      alert("Modo admin activado");
+      render();
+    } else {
+      alert("Contraseña incorrecta");
+    }
+  }
 });
 
-render();
+/* --- Firestore realtime: escucha colección 'players' ordenada por points desc --- */
+const q = query(collection(db, "players"), orderBy("points", "desc"));
+onSnapshot(q, snapshot => {
+  data = [];
+  snapshot.forEach(d => data.push({ id: d.id, ...d.data() }));
+  render(); // re-render cada vez que cambian datos en Firestore
+});
 
+/* --- inicial render --- */
+render();
 </script>
 </body>
 </html>
+
 
 
 
