@@ -133,6 +133,9 @@ input,select{
 </div>
 
 <script>
+let admin=false;
+const ADMIN_CODE="kraftune123";
+
 const data=[];
 const cats=['PvP','Mace','BuildUHC','Nodebuff','Battleground','CrystalPvP','Ganadores de Eventos','Mejor del Server de Discord','Finalistas'];
 const descCats=new Set(['Ganadores de Eventos','Mejor del Server de Discord','Finalistas']);
@@ -141,95 +144,106 @@ let active=cats[0];
 const nav=document.getElementById('nav');
 const content=document.getElementById('content');
 const search=document.getElementById('search');
+const addBtn=document.getElementById('addBtn');
 
-function ordinal(i){const j=i%10,k=i%100;if(k>=11&&k<=13)return'th';if(j===1)return'st';if(j===2)return'nd';if(j===3)return'rd';return'th'}
+function ordinal(i){
+ const j=i%10,k=i%100;
+ if(k>=11&&k<=13)return'th';
+ if(j===1)return'st';
+ if(j===2)return'nd';
+ if(j===3)return'rd';
+ return'th';
+}
 
 function renderNav(){
-nav.innerHTML='';
-cats.forEach(c=>{
-const b=document.createElement('button');
-b.className='tab'+(c===active?' active':'');
-b.textContent=c;
-b.onclick=()=>{active=c;render(true)};
-nav.appendChild(b);
-});
+ nav.innerHTML='';
+ cats.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='tab'+(c===active?' active':'');
+  b.textContent=c;
+  b.onclick=()=>{active=c;render()};
+  nav.appendChild(b);
+ });
 }
 
-function drawList(list){
-content.innerHTML='';
-const ul=document.createElement('ul');
-ul.className='player-list';
+function render(){
+ renderNav();
+ const q=search.value.toLowerCase();
+ const list=data.filter(d=>d.cat===active&&d.name.toLowerCase().includes(q)).sort((a,b)=>b.points-a.points);
+ content.innerHTML='';
+ const ul=document.createElement('ul');
+ ul.className='player-list';
 
-list.forEach((p,i)=>{
-const li=document.createElement('li');
-li.className='player-item';
+ list.forEach((p,i)=>{
+  const li=document.createElement('li');
+  li.className='player-item';
 
-let rankClass='';
-if(i===0)rankClass='rank1';
-else if(i===1)rankClass='rank2';
-else if(i===2)rankClass='rank3';
+  let extra='';
+  if(descCats.has(p.cat)&&p.desc)extra=p.desc;
+  else if(!descCats.has(p.cat)&&p.link)extra=p.link;
 
-let extra='';
-if(descCats.has(p.cat)&&p.desc)extra=p.desc;
-else if(!descCats.has(p.cat)&&p.link)extra=p.link;
+  li.innerHTML=`
+   <div class='player-rank'>${i+1}${ordinal(i+1)}</div>
+   <div class='player-box'></div>
+   <div>
+    <div class='player-name'>${p.name}</div>
+    <div class='player-points'>${p.points} pts</div>
+    <div class='player-extra'>${extra||''}</div>
+   </div>
+  `;
 
-li.innerHTML=`
-<div class='player-rank ${rankClass}'>${i+1}${ordinal(i+1)}</div>
-<div class='player-box'></div>
-<div>
-<div class='player-name'>${p.name}</div>
-<div class='player-points'>${p.points} pts</div>
-<div class='player-extra'>${extra}</div>
-</div>
-<button class='delete'>X</button>
-`;
+  ul.appendChild(li);
+ });
 
-li.querySelector('.delete').onclick=()=>{
-data.splice(data.indexOf(p),1);
-render();
-};
-
-ul.appendChild(li);
-});
-
-content.appendChild(ul);
+ content.appendChild(ul);
 }
 
-function render(slide=false){
-renderNav();
-const q=search.value.toLowerCase();
-const list=data.filter(d=>d.cat===active&&d.name.toLowerCase().includes(q)).sort((a,b)=>b.points-a.points);
-
-if(slide){
-content.classList.add('slide-out');
-setTimeout(()=>{
-drawList(list);
-content.classList.remove('slide-out');
-content.classList.add('slide-in');
-setTimeout(()=>content.classList.remove('slide-in'),350);
-},250);
-}else drawList(list);
-}
-
-search.oninput=()=>render();
+search.oninput=render;
 
 const modal=document.getElementById('modal');
-document.getElementById('addBtn').onclick=()=>modal.classList.add('open');
+
+addBtn.onclick=()=>{
+ if(!admin){
+   const code=prompt("Código admin:");
+   if(code===ADMIN_CODE){
+    admin=true;
+    alert("Modo admin activado");
+   }else{
+    alert("Código incorrecto");
+    return;
+   }
+ }
+ modal.classList.add('open');
+};
+
 document.getElementById('cancel').onclick=()=>modal.classList.remove('open');
 
 document.getElementById('save').onclick=()=>{
-const name=document.getElementById('f-name').value.trim();
-const cat=document.getElementById('f-cat').value;
-const points=parseInt(document.getElementById('f-points').value)||0;
-const desc=document.getElementById('f-desc').value.trim();
-const link=document.getElementById('f-link').value.trim();
-if(!name)return alert('Pon nombre');
-data.push({name,cat,points,desc,link});
-modal.classList.remove('open');
-render();
+ if(!admin)return;
+
+ const name=document.getElementById('f-name').value.trim();
+ const cat=document.getElementById('f-cat').value;
+ const points=parseInt(document.getElementById('f-points').value)||0;
+ const desc=document.getElementById('f-desc').value.trim();
+ const link=document.getElementById('f-link').value.trim();
+
+ if(!name)return alert('Pon nombre');
+
+ data.push({name,cat,points,desc,link});
+
+ modal.classList.remove('open');
+ document.getElementById('f-name').value='';
+ document.getElementById('f-points').value='';
+ document.getElementById('f-desc').value='';
+ document.getElementById('f-link').value='';
+
+ active=cat;
+ render();
 };
 
 render();
 </script>
+
 </body>
 </html>
+
