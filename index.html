@@ -104,7 +104,7 @@ input,select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
+  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* --- Config Firebase (tu proyecto) --- */
@@ -195,11 +195,34 @@ function drawList(list){
       <div class='player-box'></div>
       <div>
         <div class='player-name'>${p.name}</div>
-        <div class='player-points'>${p.points} pts</div>
+        <div class='player-points'><span class="points-val">${p.points}</span> pts</div>
         <div class='player-extra'>${extra}</div>
       </div>
     `;
     if(isAdmin){
+      // permitir editar puntos haciendo click en el bloque de puntos
+      const pointsEl = li.querySelector('.player-points');
+      if(pointsEl){
+        pointsEl.style.cursor = 'pointer';
+        pointsEl.title = 'Haz click para editar puntos (admin)';
+        pointsEl.onclick = async () => {
+          const entrada = prompt(`Nuevos puntos para ${p.name}:`, String(p.points));
+          if(entrada === null) return;
+          const n = parseInt(entrada);
+          if(Number.isNaN(n)){
+            alert('Número inválido');
+            return;
+          }
+          try{
+            await updateDoc(doc(db, "players", p.id), { points: n });
+            // onSnapshot reordenará la lista automáticamente
+          }catch(err){
+            console.error(err);
+            alert('Error al actualizar puntos');
+          }
+        };
+      }
+
       const del = document.createElement('button');
       del.className = 'delete-btn';
       del.textContent = '🗑';
