@@ -23,6 +23,7 @@ h1{font-size:20px;margin:0}
 .nav{display:flex;gap:8px;margin:16px 0;overflow-x:auto;position:relative}
 .indicator{position:absolute;height:100%;border-radius:999px;background:rgba(124,58,237,0.18);transition:all .35s ease;z-index:0}
 .tab{position:relative;z-index:1;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;font-weight:700;background:transparent;color:white;transition:transform .15s}
+.tab.active{background:rgba(124,58,237,0.3)}
 .tab:active{transform:scale(.98)}
 .controls{display:flex;gap:8px;margin-bottom:12px}
 .search{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white}
@@ -34,8 +35,11 @@ h1{font-size:20px;margin:0}
 .silver{color:#c0c0c0}
 .bronze{color:#cd7f32}
 .player-box{width:44px;height:36px;border:2px solid rgba(255,255,255,0.06);border-radius:6px;background:rgba(255,255,255,0.02)}
-.player-name{font-weight:700}
-.player-points{color:var(--muted);font-size:13px}
+.player-name{font-weight:700;cursor:pointer}
+.player-tier{
+  margin-left:6px;padding:2px 6px;border-radius:6px;font-size:11px;font-weight:800;background:#312e81;color:#c7d2fe;
+}
+.player-points{color:var(--muted);font-size:13px;cursor:pointer}
 .player-extra{font-size:12px;color:#cbd5f5}
 .delete-btn{margin-left:auto;background:#ef4444;border:none;border-radius:6px;padding:6px 8px;cursor:pointer;color:white}
 .slide-out{animation:slideOut .25s forwards}
@@ -98,8 +102,10 @@ input,select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.
 <!-- SCRIPT: Firebase + lógica de la página -->
 <script type="module">
 /*
-  Código completo: Firebase (Firestore) + UI
-  - Asegúrate de tener Firestore creado y reglas temporales allow read, write: if true;
+  Basado exactamente en tu archivo. Correciones:
+  - referencias a inputs del modal arregladas
+  - renderNav deja la clase active y mueve el indicador
+  - save limpia inputs y cierra modal
 */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -194,7 +200,7 @@ function drawList(list){
       <div class='player-rank ${rc}'>${i+1}${ordinalSuffix(i+1)}</div>
       <div class='player-box'></div>
       <div>
-        <div class='player-name'>${p.name}</div>
+        <div class='player-name'>${p.name}${p.tier?`<span class="player-tier">${p.tier}</span>`:''}</div>
         <div class='player-points'><span class="points-val">${p.points}</span> pts</div>
         <div class='player-extra'>${extra}</div>
       </div>
@@ -219,6 +225,22 @@ function drawList(list){
           }catch(err){
             console.error(err);
             alert('Error al actualizar puntos');
+          }
+        };
+      }
+
+      // editar tier al hacer click en el nombre
+      const nameEl = li.querySelector('.player-name');
+      if(nameEl){
+        nameEl.title = 'Haz click para editar tier (admin)';
+        nameEl.onclick = async () => {
+          const entrada = prompt(`Nuevo tier para ${p.name} (ej: LT5, HT3):`, p.tier||'LT5');
+          if(entrada === null) return;
+          try{
+            await updateDoc(doc(db,"players",p.id),{ tier: entrada.trim() });
+          }catch(err){
+            console.error(err);
+            alert('Error al actualizar tier');
           }
         };
       }
@@ -292,7 +314,8 @@ document.getElementById('save').onclick = async () => {
   const desc = document.getElementById('f-desc').value.trim();
   const link = document.getElementById('f-link').value.trim();
   if(!name){ alert('Pon nombre'); return; }
-  await addDoc(collection(db, "players"), { name, cat, points, desc, link });
+  await addDoc(collection(db, "players"), { name, cat, points, desc, link, tier: 'LT5' });
+  // limpiar modal
   document.getElementById('f-name').value = '';
   document.getElementById('f-points').value = '';
   document.getElementById('f-desc').value = '';
@@ -325,9 +348,17 @@ onSnapshot(q, snapshot => {
 
 /* --- inicial render --- */
 render();
+
+/* --- mantener indicador en resize --- */
+window.addEventListener('resize', ()=> {
+  // intentar mover indicador al tab activo
+  const activeBtn = document.querySelector('.tab.active');
+  if(activeBtn) moveIndicator(activeBtn);
+});
 </script>
 </body>
 </html>
+
 
 
 
